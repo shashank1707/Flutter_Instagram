@@ -18,7 +18,7 @@ class _SigninState extends State<Signin> {
   bool securedText = true;
 
   void signin() async {
-    AuthMethods().signinUser(email, password);
+    await AuthMethods().signinUser(email, password);
   }
 
   @override
