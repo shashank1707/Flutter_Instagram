@@ -22,4 +22,23 @@ class AuthMethods {
       print(e);
     }
   }
+
+  signinUser(email, password) async {
+    try {
+      await FirebaseAuth.instance
+          .signInWithEmailAndPassword(email: email, password: password);
+
+      print("Signed in");
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found') {
+        print('No user found for that email.');
+      } else if (e.code == 'wrong-password') {
+        print('Wrong password provided for that user.');
+      }
+    }
+  }
+
+  resetPassword(email) async {
+    await auth.sendPasswordResetEmail(email: email);
+  }
 }

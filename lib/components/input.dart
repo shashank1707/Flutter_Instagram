@@ -6,8 +6,12 @@ class MyInput extends StatelessWidget {
   final hintText;
   final onChanged;
   final inputIconChild;
+  final securedText;
   const MyInput(
-      {required this.hintText, required this.onChanged, this.inputIconChild});
+      {required this.hintText,
+      required this.onChanged,
+      this.inputIconChild,
+      this.securedText});
 
   @override
   Widget build(BuildContext context) {
@@ -18,6 +22,7 @@ class MyInput extends StatelessWidget {
             children: [
               Expanded(
                 child: TextField(
+                  obscureText: securedText != null ? securedText : false,
                   style: TextStyle(color: Color(0xff999999)),
                   decoration: InputDecoration(
                       hintText: hintText,
