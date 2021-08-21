@@ -39,26 +39,11 @@ class _SigninState extends State<Signin> {
                   hintText: "Email",
                   onChanged: null,
                 ),
-                MyContainer(
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.all(kDefaultPadding),
-                          child: TextField(
-                            style: TextStyle(color: Color(0xff999999)),
-                            decoration: InputDecoration(
-                                hintText: "Password",
-                                hintStyle: TextStyle(color: Color(0xff999999)),
-                                border: InputBorder.none),
-                            onChanged: null,
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                          onPressed: null, icon: Icon(Icons.visibility_off))
-                    ],
-                  ),
+                MyInput(
+                  hintText: "Password",
+                  onChanged: null,
+                  inputIconChild: IconButton(
+                      onPressed: () {}, icon: Icon(Icons.visibility_off)),
                 ),
                 MyContainer(
                   child: ElevatedButton(
@@ -93,7 +78,7 @@ class _SigninState extends State<Signin> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text("Dont have an account?",
+                      Text("Don't have an account?",
                           style: TextStyle(color: Color(0xff999999))),
                       TextButton(
                           onPressed: null,
