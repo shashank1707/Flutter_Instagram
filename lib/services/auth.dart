@@ -38,6 +38,10 @@ class AuthMethods {
     }
   }
 
+  checkIfAlreadyRegistered(email) async {
+    return await auth.fetchSignInMethodsForEmail(email);
+  }
+
   resetPassword(email) async {
     await auth.sendPasswordResetEmail(email: email);
   }
