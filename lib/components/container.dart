@@ -5,13 +5,16 @@ class MyContainer extends StatelessWidget {
   final child;
   final backgroundColor;
   final borderColor;
+  final alignment;
 
-  const MyContainer({this.child, this.backgroundColor, this.borderColor});
+  const MyContainer(
+      {this.child, this.backgroundColor, this.borderColor, this.alignment});
 
   @override
   Widget build(BuildContext context) {
     var devWidth = MediaQuery.of(context).size.width;
     return Container(
+      alignment: alignment,
       margin: EdgeInsets.all(kDefaultPadding),
       width: devWidth * 0.8,
       height: devWidth * 0.15,

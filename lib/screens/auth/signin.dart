@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:instagram/components/container.dart';
 import 'package:instagram/components/input.dart';
 import 'package:instagram/constants.dart';
+import 'package:instagram/screens/auth/signup.dart';
 import 'package:instagram/services/auth.dart';
 
 class Signin extends StatefulWidget {
@@ -62,14 +63,19 @@ class _SigninState extends State<Signin> {
                     });
                   },
                   inputIconChild: IconButton(
-                      onPressed: () {
-                        setState(() {
-                          securedText = !securedText;
-                        });
-                      },
-                      icon: securedText
-                          ? Icon(Icons.visibility_off)
-                          : Icon(Icons.visibility)),
+                    onPressed: () {
+                      setState(() {
+                        securedText = !securedText;
+                      });
+                    },
+                    icon: securedText
+                        ? Icon(
+                            Icons.visibility_off,
+                            color: Color(0xff999999),
+                          )
+                        : Icon(Icons.visibility),
+                    color: Color(0xff999999),
+                  ),
                 ),
                 MyContainer(
                   child: ElevatedButton(
@@ -109,7 +115,12 @@ class _SigninState extends State<Signin> {
                       Text("Don't have an account?",
                           style: TextStyle(color: Color(0xff999999))),
                       TextButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => Signup()));
+                          },
                           child: Text("Sign up",
                               style: TextStyle(
                                   color: Color(0xff000000),
