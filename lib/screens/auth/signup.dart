@@ -1,9 +1,11 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:instagram/components/container.dart';
 import 'package:instagram/components/input.dart';
 import 'package:instagram/components/modal.dart';
 import 'package:instagram/constants.dart';
 import 'package:instagram/screens/auth/setup.dart';
+import 'package:instagram/screens/auth/signin.dart';
 import 'package:instagram/services/auth.dart';
 
 class Signup extends StatefulWidget {
@@ -16,6 +18,7 @@ class Signup extends StatefulWidget {
 class _SignupState extends State<Signup> {
   //states
   String email = "";
+  bool loading = false;
 
   bool validateEmail() {
     bool emailValid = RegExp(
@@ -26,6 +29,9 @@ class _SignupState extends State<Signup> {
   }
 
   void checkForEmail() async {
+    setState(() {
+      loading = true;
+    });
     if (validateEmail()) {
       var authList = [];
       authList = await AuthMethods().checkIfAlreadyRegistered(email);
@@ -63,7 +69,8 @@ class _SignupState extends State<Signup> {
                             fontWeight: FontWeight.bold),
                       ),
                       onPressed: () {
-                        Navigator.pop(context);
+                        Navigator.pushReplacement(context,
+                            MaterialPageRoute(builder: (context) => Signin()));
                       },
                     ),
                     Divider(
@@ -87,13 +94,25 @@ class _SignupState extends State<Signup> {
           builder: (context) {
             return MyModal(
               title: "Invalid Email",
-              contents: Text(
-                "Please enter a valid Email",
-                textAlign: TextAlign.center,
+              contents: Column(
+                children: [
+                  Text(
+                    "Please enter a valid Email",
+                    textAlign: TextAlign.center,
+                  ),
+                  TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: Text("Okay"))
+                ],
               ),
             );
           });
     }
+    setState(() {
+      loading = false;
+    });
   }
 
   @override
@@ -133,10 +152,19 @@ class _SignupState extends State<Signup> {
                   child: ElevatedButton(
                       style:
                           ElevatedButton.styleFrom(primary: Color(0xff4CB5F9)),
-                      onPressed: () {
-                        checkForEmail();
-                      },
-                      child: Text("NEXT")),
+                      onPressed: loading
+                          ? null
+                          : () {
+                              checkForEmail();
+                            },
+                      child: loading
+                          ? Transform.scale(
+                              scale: 0.75,
+                              child: CircularProgressIndicator(
+                                color: Color(0xff4CB5F9),
+                              ),
+                            )
+                          : Text("NEXT")),
                 ),
               ],
             ),
@@ -154,7 +182,9 @@ class _SignupState extends State<Signup> {
                       Text("Already have an account?",
                           style: TextStyle(color: Color(0xff999999))),
                       TextButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
                           child: Text("Log in.",
                               style: TextStyle(
                                   color: Color(0xff000000),

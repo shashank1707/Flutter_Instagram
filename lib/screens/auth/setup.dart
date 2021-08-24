@@ -25,28 +25,65 @@ class _NamePasswordState extends State<NamePassword> {
     return false;
   }
 
+  bool validateName() {
+    if (name.length >= 2) return true;
+    return false;
+  }
+
   void goToNext() {
-    if (!validatePassword()) {
+    if (!validateName()) {
       showDialog(
           context: context,
           builder: (context) {
             return MyModal(
-              title: "Invalid Password",
-              contents: Text(
-                "Password must be at least 6 charcters long",
-                textAlign: TextAlign.center,
+              title: "Invalid Name",
+              contents: Column(
+                children: [
+                  Text(
+                    "Name must be at least 2 charcters long",
+                    textAlign: TextAlign.center,
+                  ),
+                  TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: Text("Okay"))
+                ],
               ),
             );
           });
     } else {
-      Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => Birthday(
-                    email: email,
-                    password: password,
-                    name: name,
-                  )));
+      if (!validatePassword()) {
+        showDialog(
+            context: context,
+            builder: (context) {
+              return MyModal(
+                title: "Invalid Password",
+                contents: Column(
+                  children: [
+                    Text(
+                      "Password must be at least 6 charcters long",
+                      textAlign: TextAlign.center,
+                    ),
+                    TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        child: Text("Okay"))
+                  ],
+                ),
+              );
+            });
+      } else {
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => Birthday(
+                      email: email,
+                      password: password,
+                      name: name,
+                    )));
+      }
     }
   }
 
@@ -147,7 +184,22 @@ class Birthday extends StatefulWidget {
 
 class _BirthdayState extends State<Birthday> {
   var dob;
+  var age;
   var email = "", name = "", password = "";
+  List<String> months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December'
+  ];
 
   @override
   void initState() {
@@ -157,6 +209,93 @@ class _BirthdayState extends State<Birthday> {
       name = widget.name;
       password = widget.password;
     });
+  }
+
+  void calculateAge(DateTime birthDate) {
+    DateTime currentDate = DateTime.now();
+    int _age = currentDate.year - birthDate.year;
+    int month1 = currentDate.month;
+    int month2 = birthDate.month;
+    if (month2 > month1) {
+      _age--;
+    } else if (month1 == month2) {
+      int day1 = currentDate.day;
+      int day2 = birthDate.day;
+      if (day2 > day1) {
+        _age--;
+      }
+    }
+    setState(() {
+      age = _age;
+    });
+  }
+
+  bool validateDob() {
+    if (dob != null) return true;
+    return false;
+  }
+
+  bool validateAge() {
+    if (age >= 18) return true;
+    return false;
+  }
+
+  void goToNext() {
+    if (!validateDob()) {
+      showDialog(
+          context: context,
+          builder: (context) {
+            return MyModal(
+              title: "Invalid Birthday",
+              contents: Column(
+                children: [
+                  Text(
+                    "Please Select a valid Birth Date",
+                    textAlign: TextAlign.center,
+                  ),
+                  TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: Text("Okay"))
+                ],
+              ),
+            );
+          });
+    } else {
+      if (!validateAge()) {
+        showDialog(
+            context: context,
+            builder: (context) {
+              return MyModal(
+                title: "Not Eligible",
+                contents: Column(
+                  children: [
+                    Text(
+                      "You must be at least 18 years old",
+                      textAlign: TextAlign.center,
+                    ),
+                    TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        child: Text("Okay"))
+                  ],
+                ),
+              );
+            });
+      } else {
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => Register(
+                      name: name,
+                      email: email,
+                      password: password,
+                      dob: dob,
+                    )));
+      }
+    }
   }
 
   @override
@@ -187,12 +326,21 @@ class _BirthdayState extends State<Birthday> {
                     textAlign: TextAlign.center,
                   ),
                 ),
+                Text("This won't be part of your public profile."),
                 MyContainer(
                   alignment: Alignment.centerLeft,
                   child: TextButton(
-                    child: Text(dob == null
-                        ? "Add Your Birthday"
-                        : dob.toString().split(" ")[0]),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          dob == null
+                              ? "Add Your Birthday"
+                              : "${months[dob.month - 1]} ${dob.day.toString()}, ${dob.year}",
+                        ),
+                        if (dob != null) Text("$age Years Old")
+                      ],
+                    ),
                     onPressed: () {
                       showDatePicker(
                               context: context,
@@ -200,6 +348,7 @@ class _BirthdayState extends State<Birthday> {
                               firstDate: DateTime(1950),
                               lastDate: DateTime.now())
                           .then((value) {
+                        if (value != null) calculateAge(value);
                         setState(() {
                           dob = value;
                         });
@@ -212,15 +361,7 @@ class _BirthdayState extends State<Birthday> {
                       style:
                           ElevatedButton.styleFrom(primary: Color(0xff4CB5F9)),
                       onPressed: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => Register(
-                                      name: name,
-                                      email: email,
-                                      password: password,
-                                      dob: dob,
-                                    )));
+                        goToNext();
                       },
                       child: Text("NEXT")),
                 ),
@@ -261,8 +402,9 @@ class _RegisterState extends State<Register> {
   }
 
   void createUsername() {
+    var _name = name.split(" ")[0];
     setState(() {
-      userName = email.split("@")[0] + "_" + name;
+      userName = email.split("@")[0] + "_" + _name;
     });
   }
 
