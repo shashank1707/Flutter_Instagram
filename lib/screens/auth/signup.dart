@@ -19,6 +19,7 @@ class _SignupState extends State<Signup> {
   //states
   String email = "";
   bool loading = false;
+  bool buttonDisabled = true;
 
   bool validateEmail() {
     bool emailValid = RegExp(
@@ -28,83 +29,71 @@ class _SignupState extends State<Signup> {
     return emailValid;
   }
 
+  void validateButton() {
+    if (validateEmail()) {
+      setState(() {
+        buttonDisabled = false;
+      });
+    } else {
+      setState(() {
+        buttonDisabled = true;
+      });
+    }
+  }
+
   void checkForEmail() async {
     setState(() {
       loading = true;
     });
-    if (validateEmail()) {
-      var authList = [];
-      authList = await AuthMethods().checkIfAlreadyRegistered(email);
-      if (authList.isEmpty) {
-        //Navigate
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => NamePassword(email: email)));
-      } else {
-        //return Modal
-        showDialog(
-            context: context,
-            builder: (context) {
-              return MyModal(
-                title: "This Email is on Another Account",
-                contents: Column(
-                  children: [
-                    Text(
-                        "You can log into the account associated with that email or you can use another email to make a new account",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Color(0xff999999))),
-                    SizedBox(
-                      height: 20,
-                    ),
-                    Divider(
-                      height: 5,
-                      thickness: 0.6,
-                    ),
-                    TextButton(
-                      child: Text(
-                        "Log in to Existing Account",
-                        style: TextStyle(
-                            color: Color(0xff4CB5F9),
-                            fontWeight: FontWeight.bold),
-                      ),
-                      onPressed: () {
-                        Navigator.pushReplacement(context,
-                            MaterialPageRoute(builder: (context) => Signin()));
-                      },
-                    ),
-                    Divider(
-                      height: 5,
-                      thickness: 0.5,
-                    ),
-                    TextButton(
-                      child: Text("Create New Account"),
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ],
-                ),
-              );
-            });
-      }
+
+    var authList = [];
+    authList = await AuthMethods().checkIfAlreadyRegistered(email);
+    if (authList.isEmpty) {
+      //Navigate
+      Navigator.push(context,
+          MaterialPageRoute(builder: (context) => NamePassword(email: email)));
     } else {
+      //return Modal
       showDialog(
           context: context,
           builder: (context) {
             return MyModal(
-              title: "Invalid Email",
+              title: "This Email is on Another Account",
               contents: Column(
                 children: [
                   Text(
-                    "Please enter a valid Email",
-                    textAlign: TextAlign.center,
+                      "You can log into the account associated with that email or you can use another email to make a new account",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Color(0xff999999))),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  Divider(
+                    height: 5,
+                    thickness: 0.6,
                   ),
                   TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: Text("Okay"))
+                    child: Text(
+                      "Log in to Existing Account",
+                      style: TextStyle(
+                          color: Color(0xff4CB5F9),
+                          fontWeight: FontWeight.bold),
+                    ),
+                    onPressed: () {
+                      Navigator.pushReplacement(context,
+                          MaterialPageRoute(builder: (context) => Signin()));
+                    },
+                  ),
+                  Divider(
+                    height: 5,
+                    thickness: 0.5,
+                  ),
+                  TextButton(
+                    child: Text("Create New Account"),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                  ),
                 ],
               ),
             );
@@ -146,25 +135,31 @@ class _SignupState extends State<Signup> {
                     setState(() {
                       email = text;
                     });
+                    validateButton();
                   },
                 ),
-                MyContainer(
-                  child: ElevatedButton(
-                      style:
-                          ElevatedButton.styleFrom(primary: Color(0xff4CB5F9)),
-                      onPressed: loading
-                          ? null
-                          : () {
-                              checkForEmail();
-                            },
-                      child: loading
-                          ? Transform.scale(
-                              scale: 0.75,
-                              child: CircularProgressIndicator(
-                                color: Color(0xff4CB5F9),
-                              ),
-                            )
-                          : Text("NEXT")),
+                Opacity(
+                  opacity: buttonDisabled ? 0.5 : 1.0,
+                  child: MyContainer(
+                    child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                            primary: Color(0xff4CB5F9)),
+                        onPressed: buttonDisabled
+                            ? () {}
+                            : loading
+                                ? () {}
+                                : () {
+                                    checkForEmail();
+                                  },
+                        child: loading
+                            ? Transform.scale(
+                                scale: 0.75,
+                                child: CircularProgressIndicator(
+                                  color: Color(0xffffffff),
+                                ),
+                              )
+                            : Text("NEXT")),
+                  ),
                 ),
               ],
             ),

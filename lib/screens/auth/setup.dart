@@ -19,6 +19,7 @@ class _NamePasswordState extends State<NamePassword> {
   String name = "";
   String password = "";
   bool securedText = true;
+  bool buttonDisabled = true;
 
   bool validatePassword() {
     if (password.length >= 6) return true;
@@ -26,65 +27,31 @@ class _NamePasswordState extends State<NamePassword> {
   }
 
   bool validateName() {
-    if (name.length >= 2) return true;
+    if (name.length >= 1) return true;
     return false;
   }
 
-  void goToNext() {
-    if (!validateName()) {
-      showDialog(
-          context: context,
-          builder: (context) {
-            return MyModal(
-              title: "Invalid Name",
-              contents: Column(
-                children: [
-                  Text(
-                    "Name must be at least 2 charcters long",
-                    textAlign: TextAlign.center,
-                  ),
-                  TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: Text("Okay"))
-                ],
-              ),
-            );
-          });
+  void validateButton() {
+    if (validatePassword() && validateName()) {
+      setState(() {
+        buttonDisabled = false;
+      });
     } else {
-      if (!validatePassword()) {
-        showDialog(
-            context: context,
-            builder: (context) {
-              return MyModal(
-                title: "Invalid Password",
-                contents: Column(
-                  children: [
-                    Text(
-                      "Password must be at least 6 charcters long",
-                      textAlign: TextAlign.center,
-                    ),
-                    TextButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        child: Text("Okay"))
-                  ],
-                ),
-              );
-            });
-      } else {
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => Birthday(
-                      email: email,
-                      password: password,
-                      name: name,
-                    )));
-      }
+      setState(() {
+        buttonDisabled = true;
+      });
     }
+  }
+
+  void goToNext() {
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => Birthday(
+                  email: email,
+                  password: password,
+                  name: name,
+                )));
   }
 
   @override
@@ -122,6 +89,7 @@ class _NamePasswordState extends State<NamePassword> {
                     setState(() {
                       name = text;
                     });
+                    validateButton();
                   },
                 ),
                 MyInput(
@@ -131,6 +99,7 @@ class _NamePasswordState extends State<NamePassword> {
                     setState(() {
                       password = text;
                     });
+                    validateButton();
                   },
                   inputIconChild: IconButton(
                     onPressed: () {
@@ -147,14 +116,19 @@ class _NamePasswordState extends State<NamePassword> {
                     color: Color(0xff999999),
                   ),
                 ),
-                MyContainer(
-                  child: ElevatedButton(
-                      style:
-                          ElevatedButton.styleFrom(primary: Color(0xff4CB5F9)),
-                      onPressed: () {
-                        goToNext();
-                      },
-                      child: Text("NEXT")),
+                Opacity(
+                  opacity: buttonDisabled ? 0.5 : 1.0,
+                  child: MyContainer(
+                    child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                            primary: Color(0xff4CB5F9)),
+                        onPressed: buttonDisabled
+                            ? () {}
+                            : () {
+                                goToNext();
+                              },
+                        child: Text("NEXT")),
+                  ),
                 ),
               ],
             ),
@@ -236,7 +210,7 @@ class _BirthdayState extends State<Birthday> {
   }
 
   bool validateAge() {
-    if (age >= 18) return true;
+    if (age >= 13) return true;
     return false;
   }
 
@@ -272,7 +246,7 @@ class _BirthdayState extends State<Birthday> {
                 contents: Column(
                   children: [
                     Text(
-                      "You must be at least 18 years old",
+                      "You should be at least 13 year of age",
                       textAlign: TextAlign.center,
                     ),
                     TextButton(
@@ -337,8 +311,17 @@ class _BirthdayState extends State<Birthday> {
                           dob == null
                               ? "Add Your Birthday"
                               : "${months[dob.month - 1]} ${dob.day.toString()}, ${dob.year}",
+                          style: TextStyle(
+                              fontWeight: FontWeight.normal,
+                              color: Colors.black),
                         ),
-                        if (dob != null) Text("$age Years Old")
+                        if (dob != null)
+                          Text(
+                            "$age Years Old",
+                            style: TextStyle(
+                                color:
+                                    validateAge() ? Colors.green : Colors.red),
+                          )
                       ],
                     ),
                     onPressed: () {
