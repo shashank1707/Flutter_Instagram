@@ -1,36 +1,34 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:instagram/components/container.dart';
 import 'package:instagram/components/input.dart';
 import 'package:instagram/components/modal.dart';
-import 'package:instagram/constants.dart';
-import 'package:instagram/screens/auth/setup.dart';
-import 'package:instagram/screens/auth/signin.dart';
 import 'package:instagram/services/auth.dart';
+import 'package:instagram/services/database.dart';
 
-class Signup extends StatefulWidget {
-  const Signup({Key? key}) : super(key: key);
+import '../../constants.dart';
+
+class ForgotPassword extends StatefulWidget {
+  const ForgotPassword({Key? key}) : super(key: key);
 
   @override
-  _SignupState createState() => _SignupState();
+  _ForgotPasswordState createState() => _ForgotPasswordState();
 }
 
-class _SignupState extends State<Signup> {
-  //states
-  String email = "";
+class _ForgotPasswordState extends State<ForgotPassword> {
+  var text = "";
   bool loading = false;
   bool buttonDisabled = true;
 
   bool validateEmail() {
     bool emailValid = RegExp(
             r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
-        .hasMatch(email);
+        .hasMatch(text);
 
     return emailValid;
   }
 
   void validateButton() {
-    if (validateEmail()) {
+    if (text.length > 1) {
       setState(() {
         buttonDisabled = false;
       });
@@ -41,55 +39,41 @@ class _SignupState extends State<Signup> {
     }
   }
 
-  void checkForEmail() async {
+  findSearchMethod() {
+    if (validateEmail()) {
+      findUserWithEmail();
+    } else {
+      findUserWithUsername();
+    }
+  }
+
+  findUserWithUsername() async {
     setState(() {
       loading = true;
     });
-
-    var authList = [];
-    authList = await AuthMethods().checkIfAlreadyRegistered(email);
-    if (authList.isEmpty) {
-      //Navigate
-      Navigator.push(context,
-          MaterialPageRoute(builder: (context) => NamePassword(email: email)));
+    var exist = await DatabaseMethods().checkIfUsernameAlreadyExist(text);
+    setState(() {
+      loading = false;
+    });
+    if (exist) {
+      await DatabaseMethods().getUserWithUsername(text).then((user) {
+        var email = user["email"];
+        AuthMethods().resetPassword(email);
+        goBack();
+      });
     } else {
-      //return Modal
       showDialog(
           context: context,
           builder: (context) {
             return MyModal(
-              title: "This Email is on Another Account",
+              title: "User does not exist",
               contents: Column(
                 children: [
-                  Text(
-                      "You can log into the account associated with that email or you can use another email to make a new account",
+                  Text("The username you provided does not exist.",
                       textAlign: TextAlign.center,
                       style: TextStyle(color: Color(0xff999999))),
-                  SizedBox(
-                    height: 20,
-                  ),
-                  Divider(
-                    height: 5,
-                    thickness: 0.6,
-                  ),
                   TextButton(
-                    child: Text(
-                      "Log in to Existing Account",
-                      style: TextStyle(
-                          color: Color(0xff4CB5F9),
-                          fontWeight: FontWeight.bold),
-                    ),
-                    onPressed: () {
-                      Navigator.pushReplacement(context,
-                          MaterialPageRoute(builder: (context) => Signin()));
-                    },
-                  ),
-                  Divider(
-                    height: 5,
-                    thickness: 0.5,
-                  ),
-                  TextButton(
-                    child: Text("Create New Account"),
+                    child: Text("Okay"),
                     onPressed: () {
                       Navigator.pop(context);
                     },
@@ -99,8 +83,66 @@ class _SignupState extends State<Signup> {
             );
           });
     }
+  }
+
+  findUserWithEmail() async {
+    setState(() {
+      loading = true;
+    });
+    var authList = [];
+    authList = await AuthMethods().checkIfAlreadyRegistered(text);
     setState(() {
       loading = false;
+    });
+    if (authList.isNotEmpty) {
+      AuthMethods().resetPassword(text);
+      goBack();
+    } else {
+      showDialog(
+          context: context,
+          builder: (context) {
+            return MyModal(
+              title: "User does not exist",
+              contents: Column(
+                children: [
+                  Text("The email you provided does not exist.",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Color(0xff999999))),
+                  TextButton(
+                    child: Text("Okay"),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                  ),
+                ],
+              ),
+            );
+          });
+    }
+  }
+
+  goBack() {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return MyModal(
+            title: "Email Sent",
+            contents: Column(
+              children: [
+                Text("Check your email to get the password reset link",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Color(0xff999999))),
+                TextButton(
+                  child: Text("Okay"),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            ),
+          );
+        }).then((value) {
+      Navigator.pop(context);
     });
   }
 
@@ -116,23 +158,33 @@ class _SignupState extends State<Signup> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text("English (United States)",
-                style: TextStyle(color: Color(0xff999999))),
             Column(
               children: [
                 Padding(
                   padding: const EdgeInsets.all(2 * kDefaultPadding),
                   child: Text(
-                    "PROVIDE YOUR EMAIL",
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    "Find Your Account",
+                    style: TextStyle(fontSize: 24),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                      3 * kDefaultPadding,
+                      kDefaultPadding,
+                      3 * kDefaultPadding,
+                      2 * kDefaultPadding),
+                  child: Text(
+                    "Enter your username or the email linked with your account",
+                    style: TextStyle(color: Color(0xff999999), fontSize: 15),
                     textAlign: TextAlign.center,
                   ),
                 ),
                 MyInput(
                   hintText: "Email",
-                  onChanged: (text) {
+                  onChanged: (value) {
                     setState(() {
-                      email = text;
+                      text = value;
                     });
                     validateButton();
                   },
@@ -148,7 +200,7 @@ class _SignupState extends State<Signup> {
                             : loading
                                 ? () {}
                                 : () {
-                                    checkForEmail();
+                                    findSearchMethod();
                                   },
                         child: loading
                             ? Transform.scale(
@@ -157,7 +209,7 @@ class _SignupState extends State<Signup> {
                                   color: Color(0xffffffff),
                                 ),
                               )
-                            : Text("NEXT")),
+                            : Text("SEND")),
                   ),
                 ),
               ],

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:instagram/components/container.dart';
 import 'package:instagram/components/input.dart';
+import 'package:instagram/components/modal.dart';
 import 'package:instagram/constants.dart';
+import 'package:instagram/screens/auth/forgot.dart';
 import 'package:instagram/screens/auth/signup.dart';
+import 'package:instagram/screens/home.dart';
 import 'package:instagram/services/auth.dart';
 
 class Signin extends StatefulWidget {
@@ -19,7 +22,42 @@ class _SigninState extends State<Signin> {
   bool securedText = true;
 
   void signin() async {
-    await AuthMethods().signinUser(email, password);
+    await AuthMethods().signinUser(email, password).then((value) {
+      if (value != null) {
+        var user = value.user;
+        if (user.emailVerified) {
+          Navigator.pushReplacement(
+              context, MaterialPageRoute(builder: (context) => Home()));
+        } else {
+          showDialog(
+              context: context,
+              builder: (context) {
+                return MyModal(
+                  title: "Email Not Verified",
+                  contents: Column(
+                    children: [
+                      Text("Verify your email before logging in",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Color(0xff999999))),
+                      TextButton(
+                        child: Text("Send verification link again"),
+                        onPressed: () {
+                          AuthMethods().sendVerificationLink(email, password);
+                        },
+                      ),
+                      TextButton(
+                        child: Text("Okay"),
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              });
+        }
+      }
+    });
   }
 
   @override
@@ -81,7 +119,7 @@ class _SigninState extends State<Signin> {
                   child: ElevatedButton(
                       style:
                           ElevatedButton.styleFrom(primary: Color(0xff4CB5F9)),
-                      onPressed: () {
+                      onPressed: () async {
                         signin();
                       },
                       child: Text("Log In")),
@@ -92,7 +130,12 @@ class _SigninState extends State<Signin> {
                     Text("Forgot your Password?",
                         style: TextStyle(color: Color(0xff999999))),
                     TextButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => ForgotPassword()));
+                        },
                         child: Text("Reset Password",
                             style: TextStyle(
                                 color: Color(0xff000000),

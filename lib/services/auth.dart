@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:instagram/services/database.dart';
 
 class AuthMethods {
   FirebaseAuth auth = FirebaseAuth.instance;
@@ -7,11 +8,18 @@ class AuthMethods {
     return auth.currentUser;
   }
 
-  signupUser(email, password) async {
+  signupUser(email, password, name, username, dob) async {
     try {
-      await auth.createUserWithEmailAndPassword(
-          email: email, password: password);
-      print("signup successful");
+      await auth
+          .createUserWithEmailAndPassword(email: email, password: password)
+          .then((value) {
+        var user = value.user;
+        if (user != null) {
+          user.sendEmailVerification();
+          DatabaseMethods()
+              .createUserDatabase(name, email, username, user.uid, dob);
+        }
+      });
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
         print('The password provided is too weak.');
@@ -25,10 +33,8 @@ class AuthMethods {
 
   signinUser(email, password) async {
     try {
-      await FirebaseAuth.instance
+      return await FirebaseAuth.instance
           .signInWithEmailAndPassword(email: email, password: password);
-
-      print("Signed in");
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
         print('No user found for that email.');
@@ -44,5 +50,13 @@ class AuthMethods {
 
   resetPassword(email) async {
     await auth.sendPasswordResetEmail(email: email);
+  }
+
+  sendVerificationLink(email, password) async {
+    await signinUser(email, password).then((value) {
+      if (value != null) {
+        value.user.sendEmailVerification();
+      }
+    });
   }
 }

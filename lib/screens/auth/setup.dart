@@ -3,7 +3,9 @@ import 'package:instagram/components/container.dart';
 import 'package:instagram/components/input.dart';
 import 'package:instagram/components/modal.dart';
 import 'package:instagram/constants.dart';
+import 'package:instagram/screens/auth/signin.dart';
 import 'package:instagram/services/auth.dart';
+import 'package:instagram/services/database.dart';
 
 class NamePassword extends StatefulWidget {
   final email;
@@ -62,7 +64,6 @@ class _NamePasswordState extends State<NamePassword> {
 
   @override
   Widget build(BuildContext context) {
-    var devWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       appBar: AppBar(
         shadowColor: Colors.transparent,
@@ -289,8 +290,7 @@ class _BirthdayState extends State<Birthday> {
               children: [
                 Image.asset(
                   'assets/images/Cake.png',
-                  width: devWidth * 0.2,
-                  height: devWidth * 0.2,
+                  width: devWidth * 0.3,
                 ),
                 Padding(
                   padding: const EdgeInsets.all(2 * kDefaultPadding),
@@ -370,7 +370,9 @@ class Register extends StatefulWidget {
 class _RegisterState extends State<Register> {
   var dob;
   var email = "", name = "", password = "";
-  var userName = "";
+  var username = "";
+  var loading = false;
+  bool showUsername = false;
 
   @override
   void initState() {
@@ -387,13 +389,84 @@ class _RegisterState extends State<Register> {
   void createUsername() {
     var _name = name.split(" ")[0];
     setState(() {
-      userName = email.split("@")[0] + "_" + _name;
+      username = email.split("@")[0] + "_" + _name;
+      username = username.toLowerCase();
+    });
+  }
+
+  bool validateUsername() {
+    bool valid = RegExp(r"^[A-Za-z]\\w{5, 29}$").hasMatch(username);
+    return valid;
+  }
+
+  void checkUsername() async {
+    setState(() {
+      loading = true;
+    });
+    setState(() {
+      username = username.toLowerCase();
+    });
+    var exist = await DatabaseMethods().checkIfUsernameAlreadyExist(username);
+    if (!exist) {
+      AuthMethods()
+          .signupUser(email, password, name, username, dob)
+          .then((value) {
+        showDialog(
+            context: context,
+            builder: (context) {
+              return MyModal(
+                title: "Signed Up Successfully",
+                contents: Column(
+                  children: [
+                    Text(
+                        "A verification link has been sent to your email. Verify your email to sign in.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Color(0xff999999))),
+                    TextButton(
+                      child: Text("Okay"),
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ],
+                ),
+              );
+            }).then((value) {
+          Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => Signin()),
+              (route) => false);
+        });
+      });
+    } else {
+      showDialog(
+          context: context,
+          builder: (context) {
+            return MyModal(
+              title: "Username not available",
+              contents: Column(
+                children: [
+                  Text(
+                    "This username is already taken. Try using another uername",
+                    textAlign: TextAlign.center,
+                  ),
+                  TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: Text("Okay"))
+                ],
+              ),
+            );
+          });
+    }
+    setState(() {
+      loading = false;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    var devWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       appBar: AppBar(
         shadowColor: Colors.transparent,
@@ -407,10 +480,14 @@ class _RegisterState extends State<Register> {
             SizedBox(),
             Column(
               children: [
-                Text(
-                  "WELCOME TO INSTAGRAM,\n$userName",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  textAlign: TextAlign.center,
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 2 * kDefaultPadding),
+                  child: Text(
+                    "WELCOME TO INSTAGRAM,\n$username",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
                 Padding(
                   padding: const EdgeInsets.all(2 * kDefaultPadding),
@@ -420,20 +497,42 @@ class _RegisterState extends State<Register> {
                     textAlign: TextAlign.center,
                   ),
                 ),
+                if (showUsername)
+                  MyInput(
+                      hintText: "Username",
+                      onChanged: (val) {
+                        setState(() {
+                          username = val.toLowerCase();
+                        });
+                      }),
                 MyContainer(
                   child: ElevatedButton(
                       style:
                           ElevatedButton.styleFrom(primary: Color(0xff4CB5F9)),
-                      onPressed: () {
-                        createUsername();
-                        print(name);
-                        print(email);
-                        print(password);
-                        print(dob.toString());
-                        print(userName);
-                      },
-                      child: Text("Register")),
+                      onPressed: loading
+                          ? () {}
+                          : () {
+                              checkUsername();
+                            },
+                      child: loading
+                          ? Transform.scale(
+                              scale: 0.75,
+                              child: CircularProgressIndicator(
+                                color: Color(0xffffffff),
+                              ),
+                            )
+                          : Text("NEXT")),
                 ),
+                TextButton(
+                    onPressed: () {
+                      setState(() {
+                        showUsername = true;
+                      });
+                    },
+                    child: Text(
+                      "Change Username",
+                      style: TextStyle(color: Color(0xff4CB5F9)),
+                    ))
               ],
             ),
             Padding(

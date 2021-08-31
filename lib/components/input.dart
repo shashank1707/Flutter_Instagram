@@ -7,11 +7,13 @@ class MyInput extends StatelessWidget {
   final onChanged;
   final inputIconChild;
   final securedText;
+  final validator;
   const MyInput(
       {required this.hintText,
       required this.onChanged,
       this.inputIconChild,
-      this.securedText});
+      this.securedText,
+      this.validator});
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +23,8 @@ class MyInput extends StatelessWidget {
           child: Row(
             children: [
               Expanded(
-                child: TextField(
+                child: TextFormField(
+                  validator: validator,
                   obscureText: securedText != null ? securedText : false,
                   style: TextStyle(color: Color(0xff999999)),
                   decoration: InputDecoration(
